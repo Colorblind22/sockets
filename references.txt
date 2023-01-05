@@ -1,0 +1,5 @@
+https://www.geeksforgeeks.org/socket-programming-cc/
+https://beej.us/guide/bgnet/html/index-wide.html
+https://www.ibm.com/docs/en/i/7.1?topic=socket-example-connection-oriented-server
+
+https://realpython.com/python-sockets/#tcp-sockets
