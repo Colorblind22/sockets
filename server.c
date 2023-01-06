@@ -6,6 +6,7 @@
 //#include <sys/types.h>
 
 #define BUFFER_LENGTH 256
+#define PORT 56542
 
 int main(int argc, char* argv[])
 {
@@ -15,6 +16,7 @@ int main(int argc, char* argv[])
     //socket
         //referred to in guide as sockfd for socket file descriptor
     int socket_descriptor = socket(/*domain*/AF_INET, /*type*/SOCK_STREAM, /*protocol*/0);
+    printf("sockfs: %d\n", socket_descriptor);
     /*
         AF_INET specifies ipv4
         SOCK_STREAM specifies TCP
@@ -23,24 +25,24 @@ int main(int argc, char* argv[])
             - /etc/protocols
     */
     // setsockopt to help in reuse of address and port
-    setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+    printf("setsockopt: %d\n", setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)));
 
     //bind
-    bind(socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+    printf("bind: %d\n", bind(socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr)));
 
 
     //listen
     int cont = listen(socket_descriptor, 5);
-
+    printf("cont: %d\n", cont);
     printf("Listening...\n");
-
     //accept
-    int client_socket_descriptor = accept(socket_descriptor, NULL, NULL);
-
+    int comm_socket_descriptor = accept(socket_descriptor, NULL, NULL);
+    printf("accept(): %d\n", comm_socket_descriptor);
     struct pollfd fd;
     nfds_t n_fd = 1;
     // number of file descriptors
     int recieve = poll(&fd, n_fd, 30000);
+    printf("poll(): %d\n", recieve);
 
     //recv
     //send
