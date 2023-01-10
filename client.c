@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     struct sockaddr_in serveraddr;
     struct addrinfo hints, *res;
-    char server[BUFFER_LENGTH];
+    char server[BUFFER_LENGTH], message[BUFFER_LENGTH], recieve[BUFFER_LENGTH];
     
     // socket
     int socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
@@ -60,6 +60,9 @@ int main(int argc, char* argv[])
         freeaddrinfo(res);
         printf("server ip retrieved\n");
     }*/
+    
+    printf("Enter message to send:\n");
+    fgets(message, sizeof(message), stdin);
 
     // bind
     // connect
@@ -71,8 +74,13 @@ int main(int argc, char* argv[])
     }
     printf("connected\n");
 
+
     // send
+    printf("sent %d bytes\n", send(socket_descriptor, message, sizeof(message), 0));
     // recv
+    recv(socket_descriptor, recieve, sizeof(recieve), 0);
+    printf("message recieved: %s\n", recieve);
     // close
+    close(socket_descriptor);
     return 0;
 }

@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
 {
     int on=1;
     struct sockaddr_in serveraddr;
+    char buffer[BUFFER_LENGTH];
     
     /*socket
         referred to in guide as sockfd for socket file descriptor
@@ -24,20 +25,20 @@ int main(int argc, char* argv[])
             - /etc/protocols
     */
     int socket_descriptor = socket(/*domain*/AF_INET, /*type*/SOCK_STREAM, /*protocol*/0);
-    printf("sockfs: %d\n", socket_descriptor);
+    printf("socket(): %d\n", socket_descriptor);
     // setsockopt to help in reuse of address and port
-    printf("setsockopt: %d\n", setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &on, sizeof(on)));
+    printf("setsockopt(): %d\n", setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &on, sizeof(on)));
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = INADDR_ANY;
     serveraddr.sin_port = htons(PORT);
 
     //bind
-    printf("bind: %d\n", bind(socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr)));
+    printf("bind(): %d\n", bind(socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr)));
 
 
     //listen
     int cont = listen(socket_descriptor, 5);
-    printf("cont: %d\n", cont);
+    printf("listen(): %d\n", cont);
     printf("Listening...\n");
     //accept
     int comm_socket_descriptor = accept(socket_descriptor, NULL, NULL);
@@ -49,7 +50,14 @@ int main(int argc, char* argv[])
     printf("poll(): %d\n", recieve);
 
     //recv
+    printf("%d bytes recieved\n", recv(comm_socket_descriptor, buffer, sizeof(buffer), 0));
+    printf("message recieved: %s\n", buffer);
     //send
+    printf("echoing message back to client\n");
+    send(comm_socket_descriptor, buffer, sizeof(buffer), 0);
+    printf("%d bytes sent\n", send(comm_socket_descriptor, buffer, sizeof(buffer), 0));
     //close
+    close(socket_descriptor);
+    close(comm_socket_descriptor);
     return 0;
 }
