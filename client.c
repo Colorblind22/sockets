@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include "message.h"
 
 #define BUFFER_LENGTH 256
 #define SERVER_PORT 8080
@@ -22,7 +23,7 @@ struct connection con;
 /* sends message through socket and returns number of bytes sent */
 int send_message(char *message)
 {
-    return send(con.socket_descriptor, message, sizeof(message), 0);
+    return ;
 }
 
 /* puts recieved message into recieve and returns number of bytes recieved */
@@ -77,7 +78,7 @@ int main(int argc, char* argv[])
         fgets(message, sizeof(message), stdin);
 
         // send
-        printf("sent %d bytes\n", send_message(message));
+        send(con.socket_descriptor, message, sizeof(message), 0);
         // recv
         recieve_message(recieve);
         printf("message recieved: %s\n", recieve);
