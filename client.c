@@ -13,49 +13,38 @@
 #define SERVER_PORT 8080
 #define SERVER_NAME "127.0.0.1"
 
-struct connection
-{
-    int socket_descriptor;
-};
-
-struct connection con;
-
-/* sends message through socket and returns number of bytes sent */
-int send_message(char *message)
-{
-    return ;
-}
-
-/* puts recieved message into recieve and returns number of bytes recieved */
-int recieve_message(char *recieve)
-{
-    return recv(con.socket_descriptor, recieve, sizeof(recieve), 0);
-}
 
 int main(int argc, char* argv[])
 {
     struct sockaddr_in serveraddr;
-    char server[BUFFER_LENGTH], message[BUFFER_LENGTH], recieve[BUFFER_LENGTH];
+    struct message msg, recieve;
+    char server[BUFFER_LENGTH];
+    int socket_descriptor;
 
     do
     {   
         int status = 0;
         
         // socket
-        con.socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
-        if(con.socket_descriptor < 0)
+        socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
+        if(socket_descriptor < 0)
         {
             perror("socket() failed");
             break;
         }
-        printf("socket: %d\n", con.socket_descriptor);
+        //printf("socket: %d\n", socket_descriptor);
 
         if(argc > 1)
             strcpy(server, argv[1]);
         else
             strcpy(server, SERVER_NAME);
 
-        printf("server name: %s\n", server);
+        //printf("server name: %s\n", server);
+
+        puts("Enter a username:");
+        fgets(msg.from, sizeof(msg.from), stdin);
+        puts("Enter the username of target:");
+        fgets(msg.to, sizeof(msg.to), stdin);
 
         // set up server info
         memset(&serveraddr, 0, sizeof(serveraddr));
@@ -65,8 +54,8 @@ int main(int argc, char* argv[])
         inet_pton(AF_INET, server, &serveraddr.sin_addr);
         
         // connect
-        printf("connecting...");
-        status = connect(con.socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
+        //printf("connecting...");
+        status = connect(socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
         if(status < 0)
         {
             perror("connect() failed");
@@ -75,17 +64,17 @@ int main(int argc, char* argv[])
         printf("\tconnected\n");
 
         printf("Enter message to send:\n");
-        fgets(message, sizeof(message), stdin);
+        fgets(msg.content, sizeof(msg.content), stdin);
 
         // send
-        send(con.socket_descriptor, message, sizeof(message), 0);
+        send(socket_descriptor, &msg, sizeof(msg), 0);
         // recv
-        recieve_message(recieve);
-        printf("message recieved: %s\n", recieve);
+        recv(socket_descriptor, &recieve, sizeof(recieve), 0);
+        printf("message recieved: %s\n", recieve.content);
     } while(0);
     
     // close
-    close(con.socket_descriptor);
+    close(socket_descriptor);
 
     return 0;
 }

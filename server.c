@@ -1,10 +1,12 @@
 #include <stdio.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/poll.h>
+#include <errno.h>
 #include <unistd.h>
-//#include <sys/types.h>
+#include <sys/time.h>
+#include <arpa/inet.h>
 #include "message.h"
 
 #define BUFFER_LENGTH 256
@@ -12,16 +14,20 @@
 
 int main(int argc, char* argv[])
 {
-    int on=1;
-    int status, socket_descriptor, comm_socket_descriptor;
-    struct sockaddr_in serveraddr;
-    char buffer[BUFFER_LENGTH];
-
-    typedef struct client
+    typedef struct client_connection
     {
         char username[64];
         int socket;
-    };
+    } client;
+
+    int on=1, max_clients=64;
+    int status, max_sd, addrlen, socket_descriptor, comm_socket_descriptor;
+    struct sockaddr_in serveraddr;
+    char buffer[BUFFER_LENGTH];
+    int client_sockets[max_clients];
+    client clients[max_clients];
+    fd_set socket_set;
+    char *message = "Hello";
     
 
     do
@@ -43,7 +49,7 @@ int main(int argc, char* argv[])
         }
 
         // setsockopt to help in reuse of address and port
-        status = setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &on, sizeof(on));
+        status = setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *)&on, sizeof(on));
         if(status < 0)
         {
             perror("setsockopt() failed");
@@ -68,8 +74,67 @@ int main(int argc, char* argv[])
             perror("listen() failed");
             break;
         }
-        printf("Listening...\n");
 
+        addrlen = sizeof(serveraddr);
+        puts("Listening...");
+
+        while(1)
+        {
+            FD_ZERO(&socket_set);
+
+            FD_SET(socket_descriptor, &socket_set);
+            max_sd = socket_descriptor;
+
+            int i;
+            int sd;
+            for(i = 0; i < max_clients; i++)
+            {
+                sd = client_sockets[i];
+
+                if(sd > 0)
+                    FD_SET(sd, &socket_set);
+
+                if(sd > max_sd)
+                    max_sd = sd;
+            }
+
+            int activity = select(max_sd + 1, &socket_set, NULL, NULL, NULL);
+
+            if((activity < 0) && (errno!=EINTR))
+            {
+                puts("select error");
+            }
+
+            int new_socket;
+            if(FD_ISSET(socket_descriptor, &socket_set))
+            {
+                if((new_socket = accept(socket_descriptor, (struct sockaddr*)&serveraddr, (socklen_t *)&addrlen))<0)
+                {
+                    perror("accept() failed");
+                    exit(1);
+                }
+
+                printf("New connection, socket %d, ip %s, port %d\n", new_socket, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
+
+                if(send(new_socket, message, sizeof(message), 0) != sizeof(message))
+                {
+                    perror("send() failed");
+                }
+
+                int j;
+                for(j = 0; j < max_clients; j++)
+                {
+                    if(client_sockets[j] == 0)
+                    {
+                        client_sockets[j] = new_socket;
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        /*
         //accept
         comm_socket_descriptor = accept(socket_descriptor, NULL, NULL);
         if(comm_socket_descriptor < 0)
@@ -106,7 +171,7 @@ int main(int argc, char* argv[])
         if(status < 0)
         {
             perror("send() failed");
-        }
+        }*/
     } while(0);
 
     //close
