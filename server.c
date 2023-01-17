@@ -27,11 +27,20 @@ int main(int argc, char* argv[])
     int client_sockets[max_clients];
     client clients[max_clients];
     fd_set socket_set;
-    char *message = "Hello";
+    struct message msg;
+    msg.from = "server";
+    msg.to = "client";
+    msg.content = "hello";
     
 
     do
     {
+        int k;
+        for(k = 0; k < max_clients; k++)
+        {
+            client_sockets[k] = 0;
+        }
+        
         /*socket
             referred to in guide as sockfd for socket file descriptor
         
@@ -81,7 +90,6 @@ int main(int argc, char* argv[])
         while(1)
         {
             FD_ZERO(&socket_set);
-
             FD_SET(socket_descriptor, &socket_set);
             max_sd = socket_descriptor;
 
@@ -90,16 +98,13 @@ int main(int argc, char* argv[])
             for(i = 0; i < max_clients; i++)
             {
                 sd = client_sockets[i];
-
                 if(sd > 0)
                     FD_SET(sd, &socket_set);
-
                 if(sd > max_sd)
                     max_sd = sd;
             }
 
             int activity = select(max_sd + 1, &socket_set, NULL, NULL, NULL);
-
             if((activity < 0) && (errno!=EINTR))
             {
                 puts("select error");
@@ -108,15 +113,16 @@ int main(int argc, char* argv[])
             int new_socket;
             if(FD_ISSET(socket_descriptor, &socket_set))
             {
+                puts("FD_ISSET");
                 if((new_socket = accept(socket_descriptor, (struct sockaddr*)&serveraddr, (socklen_t *)&addrlen))<0)
                 {
                     perror("accept() failed");
                     exit(1);
                 }
-
+                puts("accept()");
                 printf("New connection, socket %d, ip %s, port %d\n", new_socket, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
 
-                if(send(new_socket, message, sizeof(message), 0) != sizeof(message))
+                if(send(new_socket, &msg, sizeof(msg), 0) != sizeof(msg))
                 {
                     perror("send() failed");
                 }
@@ -164,9 +170,9 @@ int main(int argc, char* argv[])
         {
             perror("recv() failed");
         }
-        printf("message recieved: %s\n", buffer);
+        printf("msg recieved: %s\n", buffer);
         //send
-        printf("echoing message back to client\n");
+        printf("echoing msg back to client\n");
         status = send(comm_socket_descriptor, buffer, sizeof(buffer), 0);
         if(status < 0)
         {

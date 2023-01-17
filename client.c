@@ -17,9 +17,13 @@
 int main(int argc, char* argv[])
 {
     struct sockaddr_in serveraddr;
-    struct message msg, recieve;
+    struct message *msg, *recieve;
     char server[BUFFER_LENGTH];
+    char buffer[BUFFER_LENGTH];
     int socket_descriptor;
+
+    msg = malloc(sizeof(struct message));
+    recieve = malloc(sizeof(struct message));
 
     do
     {   
@@ -42,9 +46,11 @@ int main(int argc, char* argv[])
         //printf("server name: %s\n", server);
 
         puts("Enter a username:");
-        fgets(msg.from, sizeof(msg.from), stdin);
+        fgets(buffer, BUFFER_LENGTH, stdin);
+        msg->from = strdup(buffer);
         puts("Enter the username of target:");
-        fgets(msg.to, sizeof(msg.to), stdin);
+        fgets(buffer, BUFFER_LENGTH, stdin);
+        msg->to = strdup(buffer);
 
         // set up server info
         memset(&serveraddr, 0, sizeof(serveraddr));
@@ -61,15 +67,18 @@ int main(int argc, char* argv[])
             perror("connect() failed");
             break;
         }
-        printf("\tconnected\n");
+        printf("\tconnected to server\n");
 
         printf("Enter message to send:\n");
-        fgets(msg.content, sizeof(msg.content), stdin);
+        fgets(buffer, BUFFER_LENGTH, stdin);
+        msg->content = strdup(buffer);
 
         // send
         send(socket_descriptor, &msg, sizeof(msg), 0);
+        puts("sent");
         // recv
-        recv(socket_descriptor, &recieve, sizeof(recieve), 0);
+        recv(socket_descriptor, &recieve, 512, 0);
+        puts("recv");
         printf("message recieved: %s\n", recieve.content);
     } while(0);
     
