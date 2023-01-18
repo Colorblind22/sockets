@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     int client_sockets[max_clients];
     client clients[max_clients];
     fd_set socket_set;
-    struct message msg;
+    message msg;
     msg.from = "server";
     msg.to = "client";
     msg.content = "hello";
@@ -110,29 +110,27 @@ int main(int argc, char* argv[])
                 puts("select error");
             }
 
-            int new_socket;
             if(FD_ISSET(socket_descriptor, &socket_set))
             {
-                puts("FD_ISSET");
-                if((new_socket = accept(socket_descriptor, (struct sockaddr*)&serveraddr, (socklen_t *)&addrlen))<0)
+                if((comm_socket_descriptor = accept(socket_descriptor, (struct sockaddr*)&serveraddr, (socklen_t *)&addrlen))<0)
                 {
                     perror("accept() failed");
                     exit(1);
                 }
-                puts("accept()");
-                printf("New connection, socket %d, ip %s, port %d\n", new_socket, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
+                printf("New connection, socket %d, ip %s, port %d\n", comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
 
-                if(send(new_socket, &msg, sizeof(msg), 0) != sizeof(msg))
+                if(send(comm_socket_descriptor, &msg, sizeof(msg), 0) != sizeof(msg))
                 {
                     perror("send() failed");
                 }
+                puts("sent");
 
                 int j;
                 for(j = 0; j < max_clients; j++)
                 {
                     if(client_sockets[j] == 0)
                     {
-                        client_sockets[j] = new_socket;
+                        client_sockets[j] = comm_socket_descriptor;
 
                         break;
                     }
