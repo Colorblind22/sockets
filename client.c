@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
     *recieve = (message*)malloc(sizeof(*recieve));
     char 
     *server,
+    *username,
     buffer[BUFFER_LENGTH];
     int socket_descriptor;
 
@@ -48,6 +49,7 @@ int main(int argc, char* argv[])
         puts("Enter a username:");
         fgets(buffer, BUFFER_LENGTH, stdin);
         printf("String read: %s\n" , buffer);
+        username = strdup(buffer);
         msg->from = strdup(buffer);
         puts("Enter the username of target:");
         fgets(buffer, BUFFER_LENGTH, stdin);
@@ -70,7 +72,7 @@ int main(int argc, char* argv[])
             break;
         }
         printf("\tconnected to server\n");
-
+        
         printf("Enter message to send:\n");
         fgets(buffer, BUFFER_LENGTH, stdin);
         printf("String read: %s\n" , buffer);

@@ -24,7 +24,6 @@ int main(int argc, char* argv[])
     int status, max_sd, addrlen, socket_descriptor, comm_socket_descriptor;
     struct sockaddr_in serveraddr;
     char buffer[BUFFER_LENGTH];
-    int client_sockets[max_clients];
     client clients[max_clients];
     fd_set socket_set;
     message msg;
@@ -38,7 +37,7 @@ int main(int argc, char* argv[])
         int k;
         for(k = 0; k < max_clients; k++)
         {
-            client_sockets[k] = 0;
+            clients[k].socket = 0;
         }
         
         /*socket
@@ -97,7 +96,7 @@ int main(int argc, char* argv[])
             int sd;
             for(i = 0; i < max_clients; i++)
             {
-                sd = client_sockets[i];
+                sd = clients[i].socket;
                 if(sd > 0)
                     FD_SET(sd, &socket_set);
                 if(sd > max_sd)
@@ -128,9 +127,9 @@ int main(int argc, char* argv[])
                 int j;
                 for(j = 0; j < max_clients; j++)
                 {
-                    if(client_sockets[j] == 0)
+                    if(clients[j].socket == 0)
                     {
-                        client_sockets[j] = comm_socket_descriptor;
+                        clients[j].socket = comm_socket_descriptor;
 
                         break;
                     }

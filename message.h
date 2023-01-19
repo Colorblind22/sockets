@@ -1,4 +1,6 @@
-typedef struct
+struct message_struct
 {
     char * to, * from, * content;
-} message;
+} __attribute__((packed));
+
+typedef struct message_struct message;

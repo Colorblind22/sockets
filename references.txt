@@ -11,3 +11,6 @@ https://stackoverflow.com/questions/10162152/how-to-work-with-string-fields-in-a
 
 https://stackoverflow.com/questions/24703206/send-struct-over-tcp-socket-in-c
 https://stackoverflow.com/questions/8000851/passing-a-struct-over-tcp-sock-stream-socket-in-c
+
+
+get client to send username on connect and store in clients list to route normal strings. forget headers its too complicated with serialization and stuff
