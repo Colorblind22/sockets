@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/poll.h>
@@ -7,7 +8,6 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
-#include "message.h"
 
 #define BUFFER_LENGTH 256
 #define PORT 8080
@@ -23,13 +23,16 @@ int main(int argc, char* argv[])
     int on=1, max_clients=64;
     int status, max_sd, addrlen, socket_descriptor, comm_socket_descriptor;
     struct sockaddr_in serveraddr;
-    char buffer[BUFFER_LENGTH];
+    char 
+    buffer[BUFFER_LENGTH], 
+    msg[BUFFER_LENGTH];
     client clients[max_clients];
     fd_set socket_set;
-    message msg;
+    /* message msg;
     msg.from = "server";
     msg.to = "client";
-    msg.content = "hello";
+    msg.content = "hello"; */
+    strcpy(msg, "hello");
     
 
     do
@@ -179,7 +182,9 @@ int main(int argc, char* argv[])
 
     //close
     close(socket_descriptor);
-    close(comm_socket_descriptor);
-
+    close(comm_socket_descriptor); // maybe register to atexit
+    for(int i = 0; i < max_clients; i++)
+        close(clients[i].socket);  
+      
     return 0;
 }

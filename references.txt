@@ -12,5 +12,9 @@ https://stackoverflow.com/questions/10162152/how-to-work-with-string-fields-in-a
 https://stackoverflow.com/questions/24703206/send-struct-over-tcp-socket-in-c
 https://stackoverflow.com/questions/8000851/passing-a-struct-over-tcp-sock-stream-socket-in-c
 
+https://www.programiz.com/c-programming/c-pointers-arrays
+https://www.tutorialspoint.com/cprogramming/c_pointer_to_an_array.htm
+
+fork() and on one process listen for incoming messages and with other one send them?
 
 get client to send username on connect and store in clients list to route normal strings. forget headers its too complicated with serialization and stuff

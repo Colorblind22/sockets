@@ -7,7 +7,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "message.h"
 
 #define BUFFER_LENGTH 256
 #define SERVER_PORT 8080
@@ -17,13 +16,14 @@
 int main(int argc, char* argv[])
 {
     struct sockaddr_in serveraddr;
-    message 
+    /* message 
     *msg = (message*)malloc(sizeof(*msg)), 
-    *recieve = (message*)malloc(sizeof(*recieve));
+    *recieve = (message*)malloc(sizeof(*recieve)); */
+
     char 
     *server,
-    *username,
-    buffer[BUFFER_LENGTH];
+    username[BUFFER_LENGTH],
+    buffer[BUFFER_LENGTH]; // reject structs return to char[]
     int socket_descriptor;
 
     do
@@ -49,12 +49,13 @@ int main(int argc, char* argv[])
         puts("Enter a username:");
         fgets(buffer, BUFFER_LENGTH, stdin);
         printf("String read: %s\n" , buffer);
-        username = strdup(buffer);
-        msg->from = strdup(buffer);
-        puts("Enter the username of target:");
-        fgets(buffer, BUFFER_LENGTH, stdin);
-        printf("String read: %s\n" , buffer);
-        msg->to = strdup(buffer);
+        strcpy(username, buffer);
+		printf("username : %s\n", username);
+        //msg->from = strdup(buffer);
+        //puts("Enter the username of target:");
+        //fgets(buffer, BUFFER_LENGTH, stdin);
+        //printf("String read: %s\n" , buffer);
+        //msg->to = strdup(buffer);
 
         // set up server info
         memset(&serveraddr, 0, sizeof(serveraddr));
@@ -72,29 +73,36 @@ int main(int argc, char* argv[])
             break;
         }
         printf("\tconnected to server\n");
-        
-        printf("Enter message to send:\n");
-        fgets(buffer, BUFFER_LENGTH, stdin);
-        printf("String read: %s\n" , buffer);
-        msg->content = strdup(buffer);
-
-        // send
-        status = send(socket_descriptor, &msg, sizeof(msg), 0);
-        if(status <= 0)
-        {
-            perror("send() failed");
-            break;
-        }
-        printf("send() : %d\n", status);
-        // recv
-        status = recv(socket_descriptor, recieve, 512, 0);
-        if(status <= 0)
-        {
-            perror("recv() failed");
-            break;
-        }
-        printf("recv() : %d\n", status);
-        printf("message recieved: %s\n", recieve->content);
+		
+		puts("username sent");
+        int leave;
+		char keyword[6] = "leave";
+		do {
+			printf("Enter message to send:\n");
+			fgets(buffer, BUFFER_LENGTH, stdin); 
+			buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
+			//printf("String read: %s\n" , buffer);
+			leave = strcmp(buffer, keyword);
+			printf("leave : %d\n", leave);
+			//msg->content = strdup(buffer);
+			// send
+			status = send(socket_descriptor, buffer, sizeof(buffer), 0);
+			if(status <= 0)
+			{
+				perror("send() failed");
+				break;
+			}
+			printf("send() : %d\n", status);
+			// recv
+			status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0);
+			if(status <= 0)
+			{
+				perror("recv() failed");
+				break;
+			}
+			printf("recv() : %d\n", status);
+			printf("message recieved: %s\n", buffer);
+		} while(leave);
     } while(0);
     
     // close
