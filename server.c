@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 {
     typedef struct client_connection
     {
-        char username[64];
+        char username[BUFFER_LENGTH];
         int socket;
     } client;
 
@@ -117,15 +117,20 @@ int main(int argc, char* argv[])
                 if((comm_socket_descriptor = accept(socket_descriptor, (struct sockaddr*)&serveraddr, (socklen_t *)&addrlen))<0)
                 {
                     perror("accept() failed");
-                    exit(1);
                 }
-                printf("New connection, socket %d, ip %s, port %d\n", comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
 
-                if(send(comm_socket_descriptor, &msg, sizeof(msg), 0) != sizeof(msg))
+                if(recv(comm_socket_descriptor, buffer, BUFFER_LENGTH, 0) <= 0)
+                {
+                    perror("recv() failed");
+                }
+
+                printf("New connection, username %s, socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
+                
+                /* if(send(comm_socket_descriptor, &msg, sizeof(msg), 0) != sizeof(msg))
                 {
                     perror("send() failed");
                 }
-                puts("sent");
+                puts("sent"); */
 
                 int j;
                 for(j = 0; j < max_clients; j++)
@@ -133,6 +138,9 @@ int main(int argc, char* argv[])
                     if(clients[j].socket == 0)
                     {
                         clients[j].socket = comm_socket_descriptor;
+                        strcpy(clients[j].username, buffer);
+
+                        printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
 
                         break;
                     }

@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
     char 
     *server,
-    username[BUFFER_LENGTH],
+    username[BUFFER_LENGTH], from[BUFFER_LENGTH],
     buffer[BUFFER_LENGTH]; // reject structs return to char[]
     int socket_descriptor;
 
@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
         fgets(buffer, BUFFER_LENGTH, stdin);
         printf("String read: %s\n" , buffer);
         strcpy(username, buffer);
+        username[strcspn(username, "\n")] = '\0';
 		printf("username : %s\n", username);
         //msg->from = strdup(buffer);
         //puts("Enter the username of target:");
@@ -74,35 +75,58 @@ int main(int argc, char* argv[])
         }
         printf("\tconnected to server\n");
 		
+        status = send(socket_descriptor, username, sizeof(username), 0);
+        if(status <= 0)
+        {
+            perror("send() failed");
+            break;
+        }
 		puts("username sent");
+
+        pid_t pid = fork();
+        if(pid < 0)
+        {
+            perror("fork() failed");
+            break;
+        }
+        printf("process id %d\n", pid);
         int leave;
 		char keyword[6] = "leave";
-		do {
-			printf("Enter message to send:\n");
-			fgets(buffer, BUFFER_LENGTH, stdin); 
-			buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
-			//printf("String read: %s\n" , buffer);
-			leave = strcmp(buffer, keyword);
-			printf("leave : %d\n", leave);
-			//msg->content = strdup(buffer);
-			// send
-			status = send(socket_descriptor, buffer, sizeof(buffer), 0);
-			if(status <= 0)
-			{
-				perror("send() failed");
-				break;
-			}
-			printf("send() : %d\n", status);
-			// recv
-			status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0);
-			if(status <= 0)
-			{
-				perror("recv() failed");
-				break;
-			}
-			printf("recv() : %d\n", status);
-			printf("message recieved: %s\n", buffer);
-		} while(leave);
+		switch(pid)
+        {
+            default:
+                do {
+                    printf("Enter message to send:\n");
+                    fgets(buffer, BUFFER_LENGTH, stdin); 
+                    buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
+                    //printf("String read: %s\n" , buffer);
+                    leave = strcmp(buffer, keyword);
+                    //msg->content = strdup(buffer);
+                    // send
+                    status = send(socket_descriptor, buffer, sizeof(buffer), 0);
+                    if(status <= 0)
+                    {
+                        perror("send() failed");
+                        break;
+                    }
+                    printf("send() : %d\n", status);
+                } while(leave);
+            
+            case(0):
+            do
+            {
+                // recv
+                status = recv(socket_descriptor, from, BUFFER_LENGTH, 0);
+                status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0);
+                if(status <= 0)
+                {
+                    perror("recv() failed");
+                    break;
+                }
+                //printf("recv() : %d\n", status);
+                printf("%s: %s\n", from, buffer);
+            } while (1);
+        }
     } while(0);
     
     // close
