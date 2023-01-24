@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
     msg.content = "hello"; */
     strcpy(msg, "hello");
     
+    char serverstr[7] = "Server";
 
     do
     {
@@ -100,9 +101,9 @@ int main(int argc, char* argv[])
             for(i = 0; i < max_clients; i++)
             {
                 sd = clients[i].socket;
-                if(sd > 0)
-                    FD_SET(sd, &socket_set);
-                if(sd > max_sd)
+                if(sd > 0)  // if valid sd
+                    FD_SET(sd, &socket_set); // add to set
+                if(sd > max_sd) // select highest sd for select()
                     max_sd = sd;
             }
 
@@ -126,11 +127,10 @@ int main(int argc, char* argv[])
 
                 printf("New connection, username %s, socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
                 
-                /* if(send(comm_socket_descriptor, &msg, sizeof(msg), 0) != sizeof(msg))
-                {
-                    perror("send() failed");
-                }
-                puts("sent"); */
+                send(comm_socket_descriptor, serverstr, strlen(serverstr), 0);
+                send(comm_socket_descriptor, msg, strlen(msg), 0) != strlen(msg);
+                
+                puts("sent welcome message");
 
                 int j;
                 for(j = 0; j < max_clients; j++)
@@ -143,6 +143,31 @@ int main(int argc, char* argv[])
                         printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
 
                         break;
+                    }
+                }
+            }
+            
+            int valread;
+            for(int k = 0; k < max_clients; k++)
+            {
+                sd = clients[k].socket;
+
+                if(FD_ISSET(sd, &socket_set))
+                {
+                    if((valread = read(sd,buffer,256)) == 0)
+                    {
+                        printf("User %s at socket %d disconnected\n", clients[k].username, clients[k].socket);
+                        close(sd);
+                        clients[k].socket = 0;
+                    }
+                    else
+                    {
+                        buffer[valread] = '\0';
+                        printf("buffer : %s\n", buffer);
+                        send(sd, serverstr, strlen(serverstr), 0);
+                        puts("sent servername");
+                        send(sd, buffer, strlen(buffer), 0);
+                        puts("sent buffer");
                     }
                 }
             }
