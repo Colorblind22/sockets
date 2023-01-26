@@ -127,9 +127,18 @@ int main(int argc, char* argv[])
 
                 printf("New connection, username %s, socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
                 
-                send(comm_socket_descriptor, serverstr, strlen(serverstr), 0);
-                send(comm_socket_descriptor, msg, strlen(msg), 0) != strlen(msg);
-                
+                status = send(comm_socket_descriptor, serverstr, strlen(serverstr), 0);
+                if (status <= 0)
+                {
+                    perror("send() failed");
+                    break;
+                }
+                /* status = send(comm_socket_descriptor, msg, strlen(msg), 0) != strlen(msg);
+                if (status <= 0)
+                {
+                    perror("send() failed");
+                    break;
+                } */
                 puts("sent welcome message");
 
                 int j;
@@ -164,10 +173,19 @@ int main(int argc, char* argv[])
                     {
                         buffer[valread] = '\0';
                         printf("buffer : %s\n", buffer);
+                        /* 
                         send(sd, serverstr, strlen(serverstr), 0);
                         puts("sent servername");
                         send(sd, buffer, strlen(buffer), 0);
                         puts("sent buffer");
+                        */
+                        snprintf(msg, (strlen(buffer) + strlen(serverstr) + 4), "%s : %s", serverstr, buffer);
+                        status = send(sd, msg, BUFFER_LENGTH + 10, 0);
+                        if(status <= 0)
+                        {
+                            perror("send() failed");
+                            break;
+                        }
                     }
                 }
             }
@@ -217,7 +235,7 @@ int main(int argc, char* argv[])
     close(socket_descriptor);
     close(comm_socket_descriptor); // maybe register to atexit
     for(int i = 0; i < max_clients; i++)
-        close(clients[i].socket);  
+        if(clients[i].socket != 0) close(clients[i].socket);  
       
     return 0;
 }
