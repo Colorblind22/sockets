@@ -28,10 +28,6 @@ int main(int argc, char* argv[])
     msg[BUFFER_LENGTH];
     client clients[max_clients];
     fd_set socket_set;
-    /* message msg;
-    msg.from = "server";
-    msg.to = "client";
-    msg.content = "hello"; */
     strcpy(msg, "hello");
     
     char serverstr[7] = "Server";
@@ -180,6 +176,7 @@ int main(int argc, char* argv[])
                         puts("sent buffer");
                         */
                         snprintf(msg, (strlen(buffer) + strlen(serverstr) + 4), "%s : %s", serverstr, buffer);
+                        printf("msg : %s\n", msg);
                         status = send(sd, msg, BUFFER_LENGTH + 10, 0);
                         if(status <= 0)
                         {

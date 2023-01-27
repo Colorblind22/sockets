@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     char 
     *server,
     username[BUFFER_LENGTH], target[BUFFER_LENGTH],
-    buffer[BUFFER_LENGTH]; // reject structs return to char[]
+    buffer[BUFFER_LENGTH], message[BUFFER_LENGTH]; // reject structs return to char[]
     int socket_descriptor;
 
     do
@@ -85,43 +85,38 @@ int main(int argc, char* argv[])
             break;
         }
         //printf("process id %d\n", pid);
-		char keyword[6] = "leave";
+		char keyword[6] = "^q";
         if(pid == 0)
         {    
-            printf("\tpid %d recieving\n", pid);
+            /* printf("\tpid %d recieving\n", pid); */
             do
             {
                 // recv
+                if(!*die) break;
                 status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0);
                 if (status <= 0)
                 {
                     perror("recv() failed");
                     break;
                 }
-                /* 
-                printf("from : %s\n", from);
-                status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0);
-                if (status <= 0)
-                {
-                    perror("recv() failed");
-                    break;
-                } 
-                */
+                buffer[status] = '\0';
                 printf("%s\n", buffer);
             } while (*die);
             puts("closing recv() fork");
+            break;
         }
         if(pid > 0)
         {
-            printf("\tpid %d sending\n", pid);
+            /* printf("\tpid %d sending\n", pid); */
             do
             {
                 printf("Enter message to send:\n");
                 fgets(buffer, BUFFER_LENGTH, stdin);
-                buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
+                buffer[strcspn(buffer, "\n\uFFFd")] = '\0'; // $ man strcspn
                 *die = strcmp(buffer, keyword);
                 if(!*die) break;
-                status = send(socket_descriptor, buffer, sizeof(buffer), 0);
+                snprintf(message, (strlen(target)+strlen(username)+strlen(buffer)+4), "%s:%s : %s", target, username, buffer);
+                status = send(socket_descriptor, message, sizeof(message), 0);
                 if (status <= 0)
                 {
                     perror("send() failed");
@@ -129,6 +124,7 @@ int main(int argc, char* argv[])
                 }
             } while (*die);
             puts("closing send() fork");
+            break;
         }
 
     } while(0);
