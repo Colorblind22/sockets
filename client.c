@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
         }
         printf("\tconnected to server\n");
 		
-        status = send(socket_descriptor, username, sizeof(username), 0);
+        status = send(socket_descriptor, username, strlen(username) + 1, 0);
         if(status <= 0)
         {
             perror("send() failed");
@@ -93,13 +93,16 @@ int main(int argc, char* argv[])
             {
                 // recv
                 if(!*die) break;
-                status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0);
+                status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0); 
+                // TODO strtok and display properly
                 if (status <= 0)
                 {
                     perror("recv() failed");
                     break;
                 }
-                buffer[status] = '\0';
+                int recvlen = *((int *) &buffer[0]);
+                printf("status : %d - recvlen : %d\n", status, recvlen);
+                buffer[recvlen] = '\0';
                 printf("%s\n", buffer);
             } while (*die);
             puts("closing recv() fork");
@@ -112,10 +115,12 @@ int main(int argc, char* argv[])
             {
                 printf("Enter message to send:\n");
                 fgets(buffer, BUFFER_LENGTH, stdin);
-                buffer[strcspn(buffer, "\n\uFFFd")] = '\0'; // $ man strcspn
+                buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
                 *die = strcmp(buffer, keyword);
                 if(!*die) break;
-                snprintf(message, (strlen(target)+strlen(username)+strlen(buffer)+4), "%s:%s : %s", target, username, buffer);
+                int message_length = (strlen(target)+strlen(username)+strlen(buffer)+6);
+                snprintf(message, message_length, " %s:%s : %s", target, username, buffer);
+                message[0] = *((char *) &message_length);
                 status = send(socket_descriptor, message, sizeof(message), 0);
                 if (status <= 0)
                 {
@@ -131,6 +136,7 @@ int main(int argc, char* argv[])
     
     // close
     close(socket_descriptor);
+    exit(EXIT_SUCCESS);
 
     return 0;
 }

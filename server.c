@@ -115,15 +115,16 @@ int main(int argc, char* argv[])
                 {
                     perror("accept() failed");
                 }
-
+                
                 if(recv(comm_socket_descriptor, buffer, BUFFER_LENGTH, 0) <= 0)
                 {
                     perror("recv() failed");
                 }
-
+                
                 printf("New connection, username %s, socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
                 
-                status = send(comm_socket_descriptor, serverstr, strlen(serverstr), 0);
+                int welcomelen = (strlen(serverstr) + 1);
+                status = send(comm_socket_descriptor, serverstr, strlen(serverstr)+1, 0);
                 if (status <= 0)
                 {
                     perror("send() failed");
@@ -165,19 +166,17 @@ int main(int argc, char* argv[])
                         close(sd);
                         clients[k].socket = 0;
                     }
-                    else
+                    else // TODO strtok and route to other client
                     {
                         buffer[valread] = '\0';
+                        //buffer[*((int *) &(buffer[0]))] = '\0';
                         printf("buffer : %s\n", buffer);
-                        /* 
-                        send(sd, serverstr, strlen(serverstr), 0);
-                        puts("sent servername");
-                        send(sd, buffer, strlen(buffer), 0);
-                        puts("sent buffer");
-                        */
-                        snprintf(msg, (strlen(buffer) + strlen(serverstr) + 4), "%s : %s", serverstr, buffer);
+                        int message_length = (strlen(clients[k].username) + strlen(buffer) + strlen(serverstr) + 6);
+                        snprintf(msg, message_length, " %s:%s : %s", clients[k].username, serverstr, buffer);
+                        msg[0] = *((char *) &message_length);
                         printf("msg : %s\n", msg);
-                        status = send(sd, msg, BUFFER_LENGTH + 10, 0);
+                        status = send(sd, msg, BUFFER_LENGTH, 0);
+                        printf("message echoed - %d bytes\n",status);
                         if(status <= 0)
                         {
                             perror("send() failed");
