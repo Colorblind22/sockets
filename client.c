@@ -20,13 +20,14 @@ int main(int argc, char* argv[])
     char 
     *server,
     username[BUFFER_LENGTH], target[BUFFER_LENGTH],
-    buffer[BUFFER_LENGTH], message[BUFFER_LENGTH]; // reject structs return to char[]
+    buffer[BUFFER_LENGTH], message[BUFFER_LENGTH];
+    //delim[2] = ":"; // reject structs return to char[]
     int socket_descriptor;
 
     do
     {   
         int status = 0;
-        
+        int valread;
         // socket
         socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if(socket_descriptor < 0)
@@ -70,22 +71,35 @@ int main(int argc, char* argv[])
             break;
         }
 
+        /*valread = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0); 
+        if (valread < 0)
+        {
+            perror("recv() failed");
+            break;
+        }
+        buffer[valread] = '\0'; // trim string properly
+        char * ret = strchr(buffer , ':');
+        ret = strchr(ret, ret[1]);
+        printf("%s\n", ret);
+        free(ret); */
+
+
+        sleep(1);
         puts("Enter a username to send messages to:");
         fgets(buffer, BUFFER_LENGTH, stdin);
         strcpy(target, buffer);
         target[strcspn(target, "\n")] = '\0';
 
         int leave = 1;
-        int * die = &leave;
+        int * die = &leave; // pointer so we can reference on both forks
 
-        pid_t pid = fork();
+        pid_t pid = fork(); // 0 is child, nonzero is parent
         if(pid < 0)
         {
             perror("fork() failed");
             break;
         }
-        //printf("process id %d\n", pid);
-		char keyword[6] = "^q";
+		char keyword[6] = "leave";
         if(pid == 0)
         {    
             /* printf("\tpid %d recieving\n", pid); */
@@ -93,17 +107,20 @@ int main(int argc, char* argv[])
             {
                 // recv
                 if(!*die) break;
-                status = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0); 
-                // TODO strtok and display properly
-                if (status <= 0)
+                valread = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0); 
+                if (valread < 0)
                 {
                     perror("recv() failed");
                     break;
                 }
-                int recvlen = *((int *) &buffer[0]);
-                printf("status : %d - recvlen : %d\n", status, recvlen);
-                buffer[recvlen] = '\0';
-                printf("%s\n", buffer);
+                else if (valread == 0)
+                {
+                    perror("server closed");
+                }
+                buffer[valread] = '\0'; // trim string properly
+                char * ret = strchr(buffer , ':');
+                ret = strchr(ret, ret[1]);
+                printf("%s\n", ret);
             } while (*die);
             puts("closing recv() fork");
             break;
@@ -119,8 +136,8 @@ int main(int argc, char* argv[])
                 *die = strcmp(buffer, keyword);
                 if(!*die) break;
                 int message_length = (strlen(target)+strlen(username)+strlen(buffer)+6);
-                snprintf(message, message_length, " %s:%s : %s", target, username, buffer);
-                message[0] = *((char *) &message_length);
+                snprintf(message, message_length, "%s:%s : %s", target, username, buffer);
+                //message[0] = *((char *) &message_length);
                 status = send(socket_descriptor, message, sizeof(message), 0);
                 if (status <= 0)
                 {

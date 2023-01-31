@@ -25,10 +25,11 @@ int main(int argc, char* argv[])
     struct sockaddr_in serveraddr;
     char 
     buffer[BUFFER_LENGTH], 
-    msg[BUFFER_LENGTH];
+    msg[BUFFER_LENGTH],
+    hello[6] = "Hello";
     client clients[max_clients];
     fd_set socket_set;
-    strcpy(msg, "hello");
+
     
     char serverstr[7] = "Server";
 
@@ -123,20 +124,21 @@ int main(int argc, char* argv[])
                 
                 printf("New connection, username %s, socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
                 
-                int welcomelen = (strlen(serverstr) + 1);
-                status = send(comm_socket_descriptor, serverstr, strlen(serverstr)+1, 0);
+                /* int welcomelen = (strlen(buffer) + strlen(serverstr) + strlen(msg) + 1);
+                snprintf(msg, welcomelen, "%s:%s : %s", buffer, serverstr, msg);
+                status = send(comm_socket_descriptor, msg, welcomelen, 0);
                 if (status <= 0)
                 {
                     perror("send() failed");
                     break;
                 }
-                /* status = send(comm_socket_descriptor, msg, strlen(msg), 0) != strlen(msg);
+                status = send(comm_socket_descriptor, msg, strlen(msg), 0) != strlen(msg);
                 if (status <= 0)
                 {
                     perror("send() failed");
                     break;
-                } */
-                puts("sent welcome message");
+                }
+                puts("sent welcome message"); */
 
                 int j;
                 for(j = 0; j < max_clients; j++)
@@ -145,9 +147,7 @@ int main(int argc, char* argv[])
                     {
                         clients[j].socket = comm_socket_descriptor;
                         strcpy(clients[j].username, buffer);
-
-                        printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
-
+                        //printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
                         break;
                     }
                 }
@@ -168,15 +168,18 @@ int main(int argc, char* argv[])
                     }
                     else // TODO strtok and route to other client
                     {
+                        /*
+                            given "target:from : content"
+                            strtok ":" to isolate "target" part of message
+                            iterate through clients[] and strcmp() for the match
+                            send message trimmed to just "from : content" to user designated by "target"
+                        */       
                         buffer[valread] = '\0';
                         //buffer[*((int *) &(buffer[0]))] = '\0';
                         printf("buffer : %s\n", buffer);
-                        int message_length = (strlen(clients[k].username) + strlen(buffer) + strlen(serverstr) + 6);
-                        snprintf(msg, message_length, " %s:%s : %s", clients[k].username, serverstr, buffer);
-                        msg[0] = *((char *) &message_length);
-                        printf("msg : %s\n", msg);
-                        status = send(sd, msg, BUFFER_LENGTH, 0);
-                        printf("message echoed - %d bytes\n",status);
+                        int message_length = (strlen(clients[k].username) + strlen(buffer) + strlen(serverstr) + 5);
+                        snprintf(msg, message_length, "%s:%s : %s", clients[k].username, serverstr, buffer);
+                        status = send(sd, msg, message_length, 0);
                         if(status <= 0)
                         {
                             perror("send() failed");
