@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define BUFFER_LENGTH 256
 #define SERVER_PORT 8080
@@ -21,8 +22,8 @@ int main(int argc, char* argv[])
     *server,
     username[BUFFER_LENGTH], target[BUFFER_LENGTH],
     buffer[BUFFER_LENGTH], message[BUFFER_LENGTH];
-    //delim[2] = ":"; // reject structs return to char[]
     int socket_descriptor;
+    pid_t pid;
 
     do
     {   
@@ -40,7 +41,6 @@ int main(int argc, char* argv[])
             server = strdup(argv[1]);
         else
             server = strdup(SERVER_NAME);
-
 
         puts("Enter a username:");
         fgets(buffer, BUFFER_LENGTH, stdin);
@@ -71,19 +71,6 @@ int main(int argc, char* argv[])
             break;
         }
 
-        /*valread = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0); 
-        if (valread < 0)
-        {
-            perror("recv() failed");
-            break;
-        }
-        buffer[valread] = '\0'; // trim string properly
-        char * ret = strchr(buffer , ':');
-        ret = strchr(ret, ret[1]);
-        printf("%s\n", ret);
-        free(ret); */
-
-
         sleep(1);
         puts("Enter a username to send messages to:");
         fgets(buffer, BUFFER_LENGTH, stdin);
@@ -93,7 +80,7 @@ int main(int argc, char* argv[])
         int leave = 1;
         int * die = &leave; // pointer so we can reference on both forks
 
-        pid_t pid = fork(); // 0 is child, nonzero is parent
+        pid = fork(); // 0 is child, nonzero is parent
         if(pid < 0)
         {
             perror("fork() failed");
@@ -122,7 +109,7 @@ int main(int argc, char* argv[])
                 ret = strchr(ret, ret[1]);
                 printf("%s\n", ret);
             } while (*die);
-            puts("closing recv() fork");
+            //puts("closing recv() fork");
             break;
         }
         if(pid > 0)
@@ -145,13 +132,14 @@ int main(int argc, char* argv[])
                     break;
                 }
             } while (*die);
-            puts("closing send() fork");
+            //puts("closing send() fork");
             break;
         }
-
+        // TODO if message is recieved mid-type it interrupts input line (although input from fgets() is not affected)
     } while(0);
     
     // works but TODO close forks
+    kill(pid, SIGKILL);
 
     // close
     close(socket_descriptor);

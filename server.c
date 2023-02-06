@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
     buffer[BUFFER_LENGTH], 
     msg[BUFFER_LENGTH],
     isolate_target[BUFFER_LENGTH],
-    hello[6] = "Hello",
+    *token/*[BUFFER_LENGTH]*/,
+    //hello[6] = "Hello",
     delim[2] = ":";
     client clients[max_clients];
     fd_set socket_set;
@@ -167,8 +168,9 @@ int main(int argc, char* argv[])
                         printf("User %s at socket %d disconnected\n", clients[k].username, clients[k].socket);
                         close(sd);
                         clients[k].socket = 0;
+                        strcpy(clients[k].username, "");
                     }
-                    else // TODO strtok and route to other client
+                    else 
                     {
                         /*
                             given "target:from : content"
@@ -177,18 +179,18 @@ int main(int argc, char* argv[])
                             send message trimmed to just "from : content" to user designated by "target"
                         */    
                         buffer[valread] = '\0';
+
+                        // strtok ":" to isolate "target" part of message
                         strcpy(isolate_target, buffer);
-                        strtok(isolate_target, delim);
-                        //printf("isolate_target : %s\n", isolate_target);
+                        strtok(isolate_target, delim); 
+
+                        // iterate through clients[] and strcmp() for the match
                         client *target = NULL;
                         for(int index = 0; index < max_clients; index++)
                         {   
-                            //printf("testing clients[%d]\n", index);
                             if(!strcmp(isolate_target, clients[index].username))
                             {
-                                //printf("match found at clients[%d]\n", index);
                                 target = &clients[index];
-                                //printf("target set to &clients[%d]\n", index);
                                 break;
                             }
                         }
@@ -198,14 +200,13 @@ int main(int argc, char* argv[])
                             send(clients[k].socket, "Error: targeted user does not exist", 36, 0);
                             break;
                         }
-                        //puts("null checked");
-                        //printf("buffer : %s\n", buffer);
-                        int message_length = (strlen(clients[k].username) + strlen(buffer) + 4);
-                        //puts("message_length");
-                        snprintf(msg, message_length, "%s : %s", clients[k].username, buffer);
-                        //puts("snprintf(msg)");
+
+                        // send message trimmed to just "from : content" to user designated by "target"
+                        token = strrchr(buffer, ':');
+                        int message_length = (strlen(clients[k].username) + strlen(token) + 4);
+                        // TODO username not fetching correctly
+                        snprintf(msg, message_length, "%s : %s", clients[k].username, token);
                         status = send(target->socket, msg, message_length, 0);
-                        //puts("send()");
                         if(status <= 0)
                         {
                             perror("send() failed");
@@ -215,45 +216,6 @@ int main(int argc, char* argv[])
                 }
             }
         }
-
-        /*
-        //accept
-        comm_socket_descriptor = accept(socket_descriptor, NULL, NULL);
-        if(comm_socket_descriptor < 0)
-        {
-            perror("socket() failed");
-            break;
-        }
-
-        //poll
-        struct pollfd fd;
-        // number of file descriptors
-        nfds_t n_fd = 1;
-        status = poll(&fd, n_fd, 30000);
-        if(status == 0)
-        {
-            perror("poll() timed out");
-            break;
-        }
-        else if(status < 0)
-        {
-            perror("poll() failed");
-        }
-
-        //recv
-        status = recv(comm_socket_descriptor, buffer, sizeof(buffer), 0);
-        if(status < 0)
-        {
-            perror("recv() failed");
-        }
-        printf("msg recieved: %s\n", buffer);
-        //send
-        printf("echoing msg back to client\n");
-        status = send(comm_socket_descriptor, buffer, sizeof(buffer), 0);
-        if(status < 0)
-        {
-            perror("send() failed");
-        }*/
     } while(0);
 
     //close
