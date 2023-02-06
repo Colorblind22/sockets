@@ -151,6 +151,8 @@ int main(int argc, char* argv[])
 
     } while(0);
     
+    // works but TODO close forks
+
     // close
     close(socket_descriptor);
     exit(EXIT_SUCCESS);

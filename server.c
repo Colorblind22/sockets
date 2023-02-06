@@ -26,7 +26,9 @@ int main(int argc, char* argv[])
     char 
     buffer[BUFFER_LENGTH], 
     msg[BUFFER_LENGTH],
-    hello[6] = "Hello";
+    isolate_target[BUFFER_LENGTH],
+    hello[6] = "Hello",
+    delim[2] = ":";
     client clients[max_clients];
     fd_set socket_set;
 
@@ -173,13 +175,37 @@ int main(int argc, char* argv[])
                             strtok ":" to isolate "target" part of message
                             iterate through clients[] and strcmp() for the match
                             send message trimmed to just "from : content" to user designated by "target"
-                        */       
+                        */    
                         buffer[valread] = '\0';
-                        //buffer[*((int *) &(buffer[0]))] = '\0';
-                        printf("buffer : %s\n", buffer);
-                        int message_length = (strlen(clients[k].username) + strlen(buffer) + strlen(serverstr) + 5);
-                        snprintf(msg, message_length, "%s:%s : %s", clients[k].username, serverstr, buffer);
-                        status = send(sd, msg, message_length, 0);
+                        strcpy(isolate_target, buffer);
+                        strtok(isolate_target, delim);
+                        //printf("isolate_target : %s\n", isolate_target);
+                        client *target = NULL;
+                        for(int index = 0; index < max_clients; index++)
+                        {   
+                            //printf("testing clients[%d]\n", index);
+                            if(!strcmp(isolate_target, clients[index].username))
+                            {
+                                //printf("match found at clients[%d]\n", index);
+                                target = &clients[index];
+                                //printf("target set to &clients[%d]\n", index);
+                                break;
+                            }
+                        }
+                        if(target == NULL)
+                        {
+                            perror("user not found");
+                            send(clients[k].socket, "Error: targeted user does not exist", 36, 0);
+                            break;
+                        }
+                        //puts("null checked");
+                        //printf("buffer : %s\n", buffer);
+                        int message_length = (strlen(clients[k].username) + strlen(buffer) + 4);
+                        //puts("message_length");
+                        snprintf(msg, message_length, "%s : %s", clients[k].username, buffer);
+                        //puts("snprintf(msg)");
+                        status = send(target->socket, msg, message_length, 0);
+                        //puts("send()");
                         if(status <= 0)
                         {
                             perror("send() failed");
