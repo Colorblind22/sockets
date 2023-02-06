@@ -1,4 +1,0 @@
-Specify server or client with argv[1]
-Client
-Server
-Specify server or client with argv[1]
