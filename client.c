@@ -20,15 +20,20 @@ int main(int argc, char* argv[])
 
     char 
     *server,
-    username[BUFFER_LENGTH], target[BUFFER_LENGTH],
-    buffer[BUFFER_LENGTH], message[BUFFER_LENGTH];
+    username[BUFFER_LENGTH], 
+    target[BUFFER_LENGTH],
+    buffer[BUFFER_LENGTH], 
+    message[BUFFER_LENGTH];
+
     int socket_descriptor;
+
     pid_t pid;
 
     do
     {   
-        int status = 0;
-        int valread;
+        int 
+        status = 0,
+        valread;
         // socket
         socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if(socket_descriptor < 0)
@@ -42,6 +47,7 @@ int main(int argc, char* argv[])
         else
             server = strdup(SERVER_NAME);
 
+        puts("Chat client\nHelp:\nType \"exit()\" to exit\nType \"change()\" to change message target\n-----");
         puts("Enter a username:");
         fgets(buffer, BUFFER_LENGTH, stdin);
         strcpy(username, buffer);
@@ -77,8 +83,9 @@ int main(int argc, char* argv[])
         strcpy(target, buffer);
         target[strcspn(target, "\n")] = '\0';
 
-        int leave = 1;
-        int * die = &leave; // pointer so we can reference on both forks
+        int 
+        leave = 1,
+        *die = &leave; // pointer so we can reference on both forks
 
         pid = fork(); // 0 is child, nonzero is parent
         if(pid < 0)
@@ -86,7 +93,9 @@ int main(int argc, char* argv[])
             perror("fork() failed");
             break;
         }
-		char keyword[6] = "leave";
+		char 
+        keyword[7] = "exit()",
+        change[9] = "change()";
         if(pid == 0)
         {    
             /* printf("\tpid %d recieving\n", pid); */
@@ -103,11 +112,10 @@ int main(int argc, char* argv[])
                 else if (valread == 0)
                 {
                     perror("server closed");
+                    break;
                 }
                 buffer[valread] = '\0'; // trim string properly
-                char * ret = strchr(buffer , ':');
-                ret = strchr(ret, ret[1]);
-                printf("%s\n", ret);
+                printf("%s\n", /* ret */buffer);
             } while (*die);
             //puts("closing recv() fork");
             break;
@@ -122,9 +130,16 @@ int main(int argc, char* argv[])
                 buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
                 *die = strcmp(buffer, keyword);
                 if(!*die) break;
+                if(!strcmp(buffer, change))
+                {
+                    puts("Enter a username to send messages to:");
+                    fgets(buffer, BUFFER_LENGTH, stdin);
+                    strcpy(target, buffer);
+                    target[strcspn(target, "\n")] = '\0';
+                    continue;
+                }
                 int message_length = (strlen(target)+strlen(username)+strlen(buffer)+6);
                 snprintf(message, message_length, "%s:%s : %s", target, username, buffer);
-                //message[0] = *((char *) &message_length);
                 status = send(socket_descriptor, message, sizeof(message), 0);
                 if (status <= 0)
                 {
@@ -138,7 +153,6 @@ int main(int argc, char* argv[])
         // TODO if message is recieved mid-type it interrupts input line (although input from fgets() is not affected)
     } while(0);
     
-    // works but TODO close forks
     kill(pid, SIGKILL);
 
     // close

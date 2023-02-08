@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     buffer[BUFFER_LENGTH], 
     msg[BUFFER_LENGTH],
     isolate_target[BUFFER_LENGTH],
-    *token/*[BUFFER_LENGTH]*/,
+    *token/* [BUFFER_LENGTH]*/,
     //hello[6] = "Hello",
     delim[2] = ":";
     client clients[max_clients];
@@ -172,12 +172,11 @@ int main(int argc, char* argv[])
                     }
                     else 
                     {
-                        /*
-                            given "target:from : content"
+                        /* given "target:from : content"
                             strtok ":" to isolate "target" part of message
                             iterate through clients[] and strcmp() for the match
-                            send message trimmed to just "from : content" to user designated by "target"
-                        */    
+                            send message trimmed to just "from : content" to user designated by "target" 
+                        */
                         buffer[valread] = '\0';
 
                         // strtok ":" to isolate "target" part of message
@@ -202,10 +201,10 @@ int main(int argc, char* argv[])
                         }
 
                         // send message trimmed to just "from : content" to user designated by "target"
-                        token = strrchr(buffer, ':');
-                        int message_length = (strlen(clients[k].username) + strlen(token) + 4);
-                        // TODO username not fetching correctly
-                        snprintf(msg, message_length, "%s : %s", clients[k].username, token);
+                        token = strchr(buffer, ':');
+                        token++;
+                        strcpy(msg, token);
+                        int message_length = (strlen(msg)+1);
                         status = send(target->socket, msg, message_length, 0);
                         if(status <= 0)
                         {
