@@ -136,15 +136,18 @@ int main(int argc, char* argv[])
                     fgets(buffer, BUFFER_LENGTH, stdin);
                     strcpy(target, buffer);
                     target[strcspn(target, "\n")] = '\0';
-                    continue;
+                    //continue;
                 }
-                int message_length = (strlen(target)+strlen(username)+strlen(buffer)+6);
-                snprintf(message, message_length, "%s:%s : %s", target, username, buffer);
-                status = send(socket_descriptor, message, sizeof(message), 0);
-                if (status <= 0)
+                else
                 {
-                    perror("send() failed");
-                    break;
+                    int message_length = (strlen(target)+strlen(username)+strlen(buffer)+6);
+                    snprintf(message, message_length, "%s:%s : %s", target, username, buffer);
+                    status = send(socket_descriptor, message, sizeof(message), 0);
+                    if (status <= 0)
+                    {
+                        perror("send() failed");
+                        break;
+                    }
                 }
             } while (*die);
             //puts("closing send() fork");

@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
                     perror("recv() failed");
                 }
                 
-                printf("New connection, username %s, socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
+                printf("New connection, username \"%s\", socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
                 
                 /* int welcomelen = (strlen(buffer) + strlen(serverstr) + strlen(msg) + 1);
                 snprintf(msg, welcomelen, "%s:%s : %s", buffer, serverstr, msg);
@@ -211,6 +211,7 @@ int main(int argc, char* argv[])
                             perror("send() failed");
                             break;
                         }
+                        free(token);
                     }
                 }
             }
