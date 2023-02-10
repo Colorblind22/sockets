@@ -8,9 +8,18 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #define BUFFER_LENGTH 256
 #define PORT 8080
+
+/* 
+void fail(char* str)
+{
+    perror(str);
+    exit(EXIT_FAILURE);
+} 
+*/
 
 int main(int argc, char* argv[])
 {
@@ -20,7 +29,7 @@ int main(int argc, char* argv[])
         int socket;
     } client;
 
-    int on=1, max_clients=64;
+    int on=1, max_clients=64/* , boolean=1, *die=&boolean */;
     int status, max_sd, addrlen, socket_descriptor, comm_socket_descriptor;
     struct sockaddr_in serveraddr;
     char 
@@ -36,8 +45,23 @@ int main(int argc, char* argv[])
     
     char serverstr[7] = "Server";
 
-    do
+    /* pid_t pid = fork();
+    if(pid < 0) fail("fork() failed");
+    if(pid == 0) 
     {
+        char keyword[7] = "exit()",
+        input[BUFFER_LENGTH];
+        puts("Chat server\nHelp:\nType \"exit()\" to exit\n-----");
+        do
+        {
+            fgets(input, 7, stdin);
+            *die = strcmp(keyword, input);
+        } while(*die);
+        //break;
+    }
+    if(pid > 0) */ do
+    {
+        
         int k;
         for(k = 0; k < max_clients; k++)
         {
@@ -90,7 +114,7 @@ int main(int argc, char* argv[])
         addrlen = sizeof(serveraddr);
         puts("Listening...");
 
-        while(1)
+        while(1/* *die */)
         {
             FD_ZERO(&socket_set);
             FD_SET(socket_descriptor, &socket_set);
@@ -150,7 +174,7 @@ int main(int argc, char* argv[])
                     {
                         clients[j].socket = comm_socket_descriptor;
                         strcpy(clients[j].username, buffer);
-                        //printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
+                        printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
                         break;
                     }
                 }
@@ -211,12 +235,13 @@ int main(int argc, char* argv[])
                             perror("send() failed");
                             break;
                         }
-                        free(token);
                     }
                 }
             }
         }
     } while(0);
+
+    /* kill(pid, SIGKILL); */
 
     //close
     close(socket_descriptor);
