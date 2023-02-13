@@ -61,14 +61,14 @@ int main(int argc, char* argv[])
         inet_pton(AF_INET, server, &serveraddr.sin_addr);
         
         // connect
-        printf("connecting...");
+        fputs("connecting...", stdout);
         status = connect(socket_descriptor, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
         if(status < 0)
         {
             perror("connect() failed");
             break;
         }
-        printf("\tconnected to server\n");
+        puts("\tconnected to server");
 		
         status = send(socket_descriptor, username, strlen(username) + 1, 0);
         if(status <= 0)
@@ -115,7 +115,8 @@ int main(int argc, char* argv[])
                     break;
                 }
                 buffer[valread] = '\0'; // trim string properly
-                printf("%s\n", /* ret */buffer);
+                printf("\33[2K\r%s\n", buffer);
+                fputs(">>", stdout);
             } while (*die);
             //puts("closing recv() fork");
             break;
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
             /* printf("\tpid %d sending\n", pid); */
             do
             {
-                printf("Enter message to send:\n");
+                fputs(">>", stdout);
                 fgets(buffer, BUFFER_LENGTH, stdin);
                 buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
                 *die = strcmp(buffer, keyword);
@@ -153,7 +154,12 @@ int main(int argc, char* argv[])
             //puts("closing send() fork");
             break;
         }
-        // TODO if message is recieved mid-type it interrupts input line (although input from fgets() is not affected)
+        /* TODO fix user input being interrupted by recieving message
+            -save user input
+            -print escape character to clear line
+            -print recieved message
+            -print partial input from user
+        */
     } while(0);
     
     kill(pid, SIGKILL);

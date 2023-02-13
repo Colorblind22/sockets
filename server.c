@@ -13,13 +13,6 @@
 #define BUFFER_LENGTH 256
 #define PORT 8080
 
-/* 
-void fail(char* str)
-{
-    perror(str);
-    exit(EXIT_FAILURE);
-} 
-*/
 
 int main(int argc, char* argv[])
 {
@@ -29,7 +22,7 @@ int main(int argc, char* argv[])
         int socket;
     } client;
 
-    int on=1, max_clients=64/* , boolean=1, *die=&boolean */;
+    int on=1, max_clients=64, boolean=1, *die=&boolean;
     int status, max_sd, addrlen, socket_descriptor, comm_socket_descriptor;
     struct sockaddr_in serveraddr;
     char 
@@ -45,10 +38,14 @@ int main(int argc, char* argv[])
     
     char serverstr[7] = "Server";
 
-    /* pid_t pid = fork();
-    if(pid < 0) fail("fork() failed");
+    pid_t pid = fork();
+    if(pid < 0)
+    {
+        perror("fork() failed");
+    }
     if(pid == 0) 
     {
+        //printf("pid %d inside menu loop", pid);
         char keyword[7] = "exit()",
         input[BUFFER_LENGTH];
         puts("Chat server\nHelp:\nType \"exit()\" to exit\n-----");
@@ -59,9 +56,10 @@ int main(int argc, char* argv[])
         } while(*die);
         //break;
     }
-    if(pid > 0) */ do
+    if(pid > 0) do
     {
-        
+        sleep(1);
+        //printf("pid %d inside network loop", pid);
         int k;
         for(k = 0; k < max_clients; k++)
         {
@@ -149,23 +147,7 @@ int main(int argc, char* argv[])
                     perror("recv() failed");
                 }
                 
-                printf("New connection, username \"%s\", socket %d, ip %s, port %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
-                
-                /* int welcomelen = (strlen(buffer) + strlen(serverstr) + strlen(msg) + 1);
-                snprintf(msg, welcomelen, "%s:%s : %s", buffer, serverstr, msg);
-                status = send(comm_socket_descriptor, msg, welcomelen, 0);
-                if (status <= 0)
-                {
-                    perror("send() failed");
-                    break;
-                }
-                status = send(comm_socket_descriptor, msg, strlen(msg), 0) != strlen(msg);
-                if (status <= 0)
-                {
-                    perror("send() failed");
-                    break;
-                }
-                puts("sent welcome message"); */
+                printf("New connection:\n\tusername \"%s\"\n\tsocket %d\n\tip %s\n\tport %d\n", buffer, comm_socket_descriptor, inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
 
                 int j;
                 for(j = 0; j < max_clients; j++)
@@ -174,7 +156,7 @@ int main(int argc, char* argv[])
                     {
                         clients[j].socket = comm_socket_descriptor;
                         strcpy(clients[j].username, buffer);
-                        printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
+                        //printf("clients[%d] = {username=\"%s\", socket=%d}\n", j, clients[j].username, clients[j].socket);
                         break;
                     }
                 }
@@ -241,7 +223,8 @@ int main(int argc, char* argv[])
         }
     } while(0);
 
-    /* kill(pid, SIGKILL); */
+    //printf("killing pid %d\n", pid);
+    kill(pid, SIGKILL);
 
     //close
     close(socket_descriptor);
