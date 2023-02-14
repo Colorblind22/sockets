@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     username[BUFFER_LENGTH], 
     target[BUFFER_LENGTH],
     buffer[BUFFER_LENGTH], 
+    recieve[BUFFER_LENGTH], 
     message[BUFFER_LENGTH];
 
     int socket_descriptor;
@@ -103,7 +104,7 @@ int main(int argc, char* argv[])
             {
                 // recv
                 if(!*die) break;
-                valread = recv(socket_descriptor, buffer, BUFFER_LENGTH, 0); 
+                valread = recv(socket_descriptor, recieve, BUFFER_LENGTH, 0); 
                 if (valread < 0)
                 {
                     perror("recv() failed");
@@ -114,9 +115,16 @@ int main(int argc, char* argv[])
                     perror("server closed");
                     break;
                 }
-                buffer[valread] = '\0'; // trim string properly
-                printf("\33[2K\r%s\n", buffer);
+                recieve[valread] = '\0'; // trim string properly
+                fgets(buffer, BUFFER_LENGTH, stdin);
+                buffer[strcspn(buffer, "\n")] = '\0';
+                printf("\33[2K\r%s\n", recieve);
                 fputs(">>", stdout);
+                int c = 0;
+                while(buffer[c] != '\0')
+                {
+                    ungetc(buffer[c++], stdin);
+                }
             } while (*die);
             //puts("closing recv() fork");
             break;
