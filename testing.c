@@ -7,19 +7,21 @@
 int main()
 {
     char buffer[BUFFER_LENGTH],
-    recieve[BUFFER_LENGTH];        
-    fputs(">>",stdout);
-
-    while(1)
+        recieve[BUFFER_LENGTH];
+    fputs(">>", stdout);
+    strcpy(recieve, "message being recieved");
+    while (1)
     {
         fgets(recieve, BUFFER_LENGTH, stdin);
-        printf("%s", recieve);
-        fputs(">>",stdout);
-        for(int i = 0; i < strlen(recieve)/2; i++)
+        recieve[strcspn(recieve, "\n")] = '\0';
+        printf("\33[2K\r%s\n", recieve);
+        for(int l = strlen(recieve)-1; l >= 0; l++)
         {
-            char c = recieve[strlen(recieve)/2-1-i];
-            fputc(c, stdout);
-            ungetc(c, stdin);
+            ungetc(recieve[l], stdin);
+        }
+        for(int i = 0; i < strlen(recieve); i++)
+        {
+            fputc(recieve[i], stdout);
         }
     }
 }

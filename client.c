@@ -118,13 +118,11 @@ int main(int argc, char* argv[])
                 recieve[valread] = '\0'; // trim string properly
                 fgets(buffer, BUFFER_LENGTH, stdin);
                 buffer[strcspn(buffer, "\n")] = '\0';
-                printf("\33[2K\r%s\n", recieve);
-                fputs(">>", stdout);
-                int c = 0;
-                while(buffer[c] != '\0')
-                {
-                    ungetc(buffer[c++], stdin);
-                }
+                printf("\33[2K\r%s\n>>", recieve);
+                int c = strlen(buffer)-1;
+                //if(c==0) continue;
+                while(c >= 0) ungetc(buffer[c--], stdin); // push chars back to stdin
+                for(int p = 0; p < strlen(buffer); p++) fputc(buffer[p], stdout); // print chars back to stdout
             } while (*die);
             //puts("closing recv() fork");
             break;
