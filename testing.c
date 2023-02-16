@@ -1,27 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define BUFFER_LENGTH 256
 
 int main()
 {
-    char buffer[BUFFER_LENGTH],
-        recieve[BUFFER_LENGTH];
+    char *str = malloc(BUFFER_LENGTH), *rec = malloc(64);
     fputs(">>", stdout);
-    strcpy(recieve, "message being recieved");
-    while (1)
+    int x = 1;
+    do
     {
-        fgets(recieve, BUFFER_LENGTH, stdin);
-        recieve[strcspn(recieve, "\n")] = '\0';
-        printf("\33[2K\r%s\n", recieve);
-        for(int l = strlen(recieve)-1; l >= 0; l++)
+        fgets(str, sizeof(str), stdin);
+        int c = strlen(str)-1;
+        printf("do %d\nc %d\n", x++, c);
+        while(c >= 0)
         {
-            ungetc(recieve[l], stdin);
+            printf("unget %d\n",c);
+            ungetc(str[c--], stdin);
         }
-        for(int i = 0; i < strlen(recieve); i++)
-        {
-            fputc(recieve[i], stdout);
-        }
-    }
+        fgets(rec, sizeof(rec), stdin);
+        rec[strcspn(rec, "\n")] = '\0';
+        printf("str:%s\nrec:%s\n>>",str, rec);
+    } while (1);
 }

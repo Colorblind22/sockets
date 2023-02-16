@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
         }
 
         // setsockopt to help in reuse of address and port
-        status = setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, (char *)&on, sizeof(on));
+        status = setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR | SO_BROADCAST, (char *)&on, sizeof(on));
         if(status < 0)
         {
             perror("setsockopt() failed");

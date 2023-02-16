@@ -22,7 +22,8 @@ int main(int argc, char* argv[])
     *server,
     username[BUFFER_LENGTH], 
     target[BUFFER_LENGTH],
-    buffer[BUFFER_LENGTH], 
+    buffer[BUFFER_LENGTH],
+    temp[BUFFER_LENGTH],
     recieve[BUFFER_LENGTH], 
     message[BUFFER_LENGTH];
 
@@ -34,7 +35,8 @@ int main(int argc, char* argv[])
     {   
         int 
         status = 0,
-        valread;
+        valread,
+        c;
         // socket
         socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
         if(socket_descriptor < 0)
@@ -99,7 +101,7 @@ int main(int argc, char* argv[])
         change[9] = "change()";
         if(pid == 0)
         {    
-            /* printf("\tpid %d recieving\n", pid); */
+            printf("\tpid %d recieving\n", pid);
             do
             {
                 // recv
@@ -116,20 +118,23 @@ int main(int argc, char* argv[])
                     break;
                 }
                 recieve[valread] = '\0'; // trim string properly
-                fgets(buffer, BUFFER_LENGTH, stdin);
-                buffer[strcspn(buffer, "\n")] = '\0';
-                printf("\33[2K\r%s\n>>", recieve);
-                int c = strlen(buffer)-1;
-                //if(c==0) continue;
-                while(c >= 0) ungetc(buffer[c--], stdin); // push chars back to stdin
-                for(int p = 0; p < strlen(buffer); p++) fputc(buffer[p], stdout); // print chars back to stdout
+                printf("recieve:%s\n", recieve);
+                fgets(temp, sizeof(temp), stdin);
+                printf("temp:%s\n", temp);
+                c = strlen(temp)-1;
+                printf("c:%d\n", c);
+                while(c >= 0)
+                {
+                    ungetc(temp[c--], stdin);
+                }
+                printf("\33[2K\r%s\n>>%s", recieve, temp);
             } while (*die);
             //puts("closing recv() fork");
             break;
         }
         if(pid > 0)
         {
-            /* printf("\tpid %d sending\n", pid); */
+            printf("\tpid %d sending\n", pid);
             do
             {
                 fputs(">>", stdout);
