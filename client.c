@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <signal.h>
-#include <curses.h>
+/* #include <termios.h> */
 
 #define BUFFER_LENGTH 256
 #define SERVER_PORT 8080
@@ -31,6 +31,13 @@ int main(int argc, char* argv[])
     int socket_descriptor;
 
     pid_t pid;
+
+   /*  struct termios oldt, newt;
+    
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt); */
 
     do
     {   
@@ -86,10 +93,11 @@ int main(int argc, char* argv[])
         fgets(buffer, BUFFER_LENGTH, stdin);
         strcpy(target, buffer);
         target[strcspn(target, "\n")] = '\0';
+        puts("-----");
 
         int 
         leave = 1,
-        *die = &leave; // pointer so we can reference on both forks
+        *die = &leave; // pointer jic so we can reference on both forks
 
         pid = fork(); // 0 is child, nonzero is parent
         if(pid < 0)
@@ -102,7 +110,7 @@ int main(int argc, char* argv[])
         change[9] = "change()";
         if(pid == 0)
         {    
-            printf("\tpid %d recieving\n", pid);
+            //printf("\tpid %d recieving\n", pid);
             do
             {
                 // recv
@@ -119,26 +127,24 @@ int main(int argc, char* argv[])
                     break;
                 }
                 recieve[valread] = '\0'; // trim string properly
-                printf("recieve:%s\n", recieve);
-                fgets(temp, sizeof(temp), stdin);
-                printf("temp:%s\n", temp);
+                /* fgets(temp, sizeof(temp), stdin);
                 c = strlen(temp)-1;
-                printf("c:%d\n", c);
                 while(c >= 0)
                 {
                     ungetc(temp[c--], stdin);
-                }
-                printf("\33[2K\r%s\n>>%s", recieve, temp);
+                } */
+                //printf("\33[0G\n%s\n\33[F", recieve);
+                puts(recieve);
             } while (*die);
             //puts("closing recv() fork");
             break;
         }
         if(pid > 0)
         {
-            printf("\tpid %d sending\n", pid);
+            //printf("\tpid %d sending\n", pid);
             do
             {
-                fputs(">>", stdout);
+                //fputs(">>", stdout);
                 fgets(buffer, BUFFER_LENGTH, stdin);
                 buffer[strcspn(buffer, "\n")] = '\0'; // $ man strcspn
                 *die = strcmp(buffer, keyword);
@@ -174,8 +180,8 @@ int main(int argc, char* argv[])
         */
     } while(0);
     
+    /* tcsetattr(STDIN_FILENO, TCSANOW, &oldt); */
     kill(pid, SIGKILL);
-
     // close
     close(socket_descriptor);
     exit(EXIT_SUCCESS);
