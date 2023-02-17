@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <signal.h>
+#include <curses.h>
 
 #define BUFFER_LENGTH 256
 #define SERVER_PORT 8080

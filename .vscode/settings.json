@@ -2,6 +2,8 @@
     "files.associations": {
         "poll.h": "c",
         "time.h": "c",
-        "in.h": "c"
+        "in.h": "c",
+        "curses.h": "c",
+        "ncurses.h": "c"
     }
 }
